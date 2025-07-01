@@ -70,36 +70,6 @@
     <button type="submit" class="btn btn-info text-white">Send Message</button>
   </form>
 
-  <script>
-    document.getElementById('contactForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const formData = {
-        name: document.getElementById('name').value,
-        phone: document.getElementById('phone').value,
-        email: document.getElementById('email').value,
-        service: document.getElementById('service').value,
-        message: document.getElementById('message').value
-      };
-
-      fetch('http://email.techscaleups.in/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert('Message sent successfully!');
-        document.getElementById('contactForm').reset();
-      })
-      .catch(err => {
-        console.error(err);
-        alert('Something went wrong. Please try again later.');
-      });
-    });
-  </script>
 
 </body>
 </html>
