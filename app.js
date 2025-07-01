@@ -64,7 +64,7 @@ app.post('/contact', async (req, res) => {
   }
 
   try {
-    // Write to Excel
+    // Save to Excel
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(EXCEL_FILE);
     const sheet = workbook.getWorksheet('Contacts');
@@ -78,25 +78,38 @@ app.post('/contact', async (req, res) => {
     });
     await workbook.xlsx.writeFile(EXCEL_FILE);
 
-    // Send email
-  const mailOptions = {
-  from: `"${name}" <${email}>`, // sender appears as user
-  to: email, // recipient is the user
-  subject: `New Contact Submission from ${name}`,
-  html: `
-    <h2>New Contact Form Submission</h2>
-    <p><strong>Name:</strong> ${name}</p>
-    <p><strong>Phone:</strong> ${phone}</p>
-    <p><strong>Email:</strong> ${email}</p>
-    <p><strong>Service:</strong> ${service}</p>
-    <p><strong>Message:</strong> ${message}</p>
-  `
-};
+    // Email to admin
+    const adminMail = {
+      from: '"TechScaleUps" <info.techscaleup@gmail.com>',
+      to: 'info.techscaleup@gmail.com',
+      subject: `New Contact Submission from ${name}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Service:</strong> ${service}</p>
+        <p><strong>Message:</strong> ${message}</p>
+      `
+    };
 
+    await transporter.sendMail(adminMail);
 
-    await transporter.sendMail(mailOptions);
+    // Auto-reply to user
+    const userMail = {
+      from: '"TechScaleUps" <info.techscaleup@gmail.com>',
+      to: email,
+      subject: 'We’ve received your message!',
+      html: `
+        <p>Hi ${name},</p>
+        <p>Thank you for contacting <strong>TechScaleUps</strong>. We’ve received your message and will get back to you shortly.</p>
+        <p>– Team TechScaleUps</p>
+      `
+    };
 
-    res.status(200).json({ success: true, message: 'Form submitted and email sent successfully.' });
+    await transporter.sendMail(userMail);
+
+    res.status(200).json({ success: true, message: 'Form submitted and emails sent successfully.' });
 
   } catch (err) {
     console.error('❌ Error:', err);
