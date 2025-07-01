@@ -20,7 +20,7 @@ const EXCEL_FILE = path.join(__dirname, 'contacts.xlsx');
 async function createExcelIfNotExists() {
   const workbook = new ExcelJS.Workbook();
   try {
-    await workbook.xlsx.readFile(EXCEL_FILE);
+    await workbook.xlsx.readFile(EXCEL_FILE); // If exists, do nothing
   } catch {
     const sheet = workbook.addWorksheet('Contacts');
     sheet.columns = [
@@ -32,6 +32,7 @@ async function createExcelIfNotExists() {
       { header: 'Date', key: 'date' }
     ];
     await workbook.xlsx.writeFile(EXCEL_FILE);
+    console.log('✅ contacts.xlsx file created.');
   }
 }
 createExcelIfNotExists();
@@ -40,12 +41,17 @@ createExcelIfNotExists();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'info.techscaleup@gmail.com',
-    pass: 'ajmy wudm wqxe cheg' // App password (not Gmail password)
+    user: 'info.techscaleup@gmail.com', // Replace with your email
+    pass: 'ajmy wudm wqxe cheg'         // Use App Password, not Gmail password
   }
 });
 
-// Contact API Route
+// API Health Check Route
+app.get('/', (req, res) => {
+  res.send('✅ TechScaleUps Email API is running!');
+});
+
+// Contact Form Submission Route
 app.post('/contact', async (req, res) => {
   const { name, phone, email, service, message } = req.body;
 
@@ -68,24 +74,26 @@ app.post('/contact', async (req, res) => {
     });
     await workbook.xlsx.writeFile(EXCEL_FILE);
 
-    // Email content
+    // Prepare email
     const mailOptions = {
-      from: `"${name}" <info.techscaleup@gmail.com>`, // You can't spoof 'from' address with Gmail
+      from: `"${name}" <info.techscaleup@gmail.com>`,
       to: 'info.techscaleup@gmail.com',
-      subject: `New Contact Submission from ${name} (${email})`, // 👈 Email visible in inbox
+      subject: `New Contact Submission from ${name}`,
       html: `
-        <h2>Contact Form Submission</h2>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Phone:</b> ${phone}</p>
-        <p><b>Email:</b> ${email}</p>
-        <p><b>Service:</b> ${service}</p>
-        <p><b>Message:</b> ${message}</p>
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Service:</strong> ${service}</p>
+        <p><strong>Message:</strong> ${message}</p>
       `
     };
 
+    // Send Email
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ success: true, message: 'Form submitted and email sent.' });
+    // Respond
+    res.status(200).json({ success: true, message: 'Form submitted and email sent successfully.' });
 
   } catch (err) {
     console.error('❌ Error:', err);
@@ -93,7 +101,7 @@ app.post('/contact', async (req, res) => {
   }
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server is running at http://localhost:${PORT}`);
 });
