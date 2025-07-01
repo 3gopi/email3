@@ -79,9 +79,9 @@ app.post('/contact', async (req, res) => {
     await workbook.xlsx.writeFile(EXCEL_FILE);
 
     // Send email
-    const mailOptions = {
-  from: `"${name}" <${email}>`, // Show client’s email instead of "me"
-  to: 'info.techscaleup@gmail.com',
+  const mailOptions = {
+  from: `"${name}" <${email}>`, // sender appears as user
+  to: email, // recipient is the user
   subject: `New Contact Submission from ${name}`,
   html: `
     <h2>New Contact Form Submission</h2>
@@ -92,6 +92,7 @@ app.post('/contact', async (req, res) => {
     <p><strong>Message:</strong> ${message}</p>
   `
 };
+
 
     await transporter.sendMail(mailOptions);
 
