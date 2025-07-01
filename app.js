@@ -8,19 +8,23 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// CORS setup
+app.use(cors({
+  origin: 'https://techscaleups.in'
+}));
+
 // Middleware
-app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Excel file path
 const EXCEL_FILE = path.join(__dirname, 'contacts.xlsx');
 
-// Create Excel file if it doesn't exist
+// Create Excel file if not exists
 async function createExcelIfNotExists() {
   const workbook = new ExcelJS.Workbook();
   try {
-    await workbook.xlsx.readFile(EXCEL_FILE); // If exists, do nothing
+    await workbook.xlsx.readFile(EXCEL_FILE);
   } catch {
     const sheet = workbook.addWorksheet('Contacts');
     sheet.columns = [
@@ -41,17 +45,17 @@ createExcelIfNotExists();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'info.techscaleup@gmail.com', // Replace with your email
-    pass: 'ajmy wudm wqxe cheg'         // Use App Password, not Gmail password
+    user: 'info.techscaleup@gmail.com',
+    pass: 'ajmy wudm wqxe cheg' // App password
   }
 });
 
-// API Health Check Route
+// Health check route
 app.get('/', (req, res) => {
   res.send('✅ TechScaleUps Email API is running!');
 });
 
-// Contact Form Submission Route
+// Contact form route
 app.post('/contact', async (req, res) => {
   const { name, phone, email, service, message } = req.body;
 
@@ -60,7 +64,7 @@ app.post('/contact', async (req, res) => {
   }
 
   try {
-    // Save to Excel
+    // Write to Excel
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(EXCEL_FILE);
     const sheet = workbook.getWorksheet('Contacts');
@@ -74,25 +78,23 @@ app.post('/contact', async (req, res) => {
     });
     await workbook.xlsx.writeFile(EXCEL_FILE);
 
-    // Prepare email
+    // Send email
     const mailOptions = {
-      from: `"${name}" <info.techscaleup@gmail.com>`,
-      to: 'info.techscaleup@gmail.com',
-      subject: `New Contact Submission from ${name}`,
-      html: `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Phone:</strong> ${phone}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Service:</strong> ${service}</p>
-        <p><strong>Message:</strong> ${message}</p>
-      `
-    };
+  from: `"${name}" <${email}>`, // Show client’s email instead of "me"
+  to: 'info.techscaleup@gmail.com',
+  subject: `New Contact Submission from ${name}`,
+  html: `
+    <h2>New Contact Form Submission</h2>
+    <p><strong>Name:</strong> ${name}</p>
+    <p><strong>Phone:</strong> ${phone}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Service:</strong> ${service}</p>
+    <p><strong>Message:</strong> ${message}</p>
+  `
+};
 
-    // Send Email
     await transporter.sendMail(mailOptions);
 
-    // Respond
     res.status(200).json({ success: true, message: 'Form submitted and email sent successfully.' });
 
   } catch (err) {
@@ -101,7 +103,7 @@ app.post('/contact', async (req, res) => {
   }
 });
 
-// Start the server
+// Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server is running at http://localhost:${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
